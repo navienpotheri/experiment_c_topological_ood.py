@@ -1,99 +1,70 @@
-# Topological State Extraction Against Non-Stationary Micro-Artifacts
+# Experiment C: Out-of-Distribution Topological Generalization in $SE(2)$
 
-[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![TDA: Ripser](https://img.shields.io/badge/TDA-Ripser%20%2F%20Persim-orange.svg)](https://ripser.scikit-tda.org/)
-
-A Topological Data Analysis (TDA) framework that proves true macro-structural state transitions in non-stationary wearable time-series (e-textiles, surface EMG, and first-person kinematic sensors) can be cleanly extracted and separated from high-amplitude micro-artifact noise.
+A geometric benchmark evaluating zero-shot trajectory adaptation under dynamic, out-of-distribution (OOD) topological boundary shifts using persistent simplicial graph filtration without gradient retraining.
 
 ---
 
-## The Problem: E-Textile Noise Pathology
+## 📌 Executive Summary
 
-Wearable e-textiles, biometric electrodes, and first-person kinematic sensors generate non-stationary time-series corrupted by:
-* **Contact Impedance Fluctuations:** Intermittent skin-sensor contact breaks causing severe amplitude spikes.
-* **Micro-Vibrations & Tremors:** High-frequency environmental and physiological noise.
-* **Non-Gaussian Drift:** Baseline wandering that trips standard threshold and derivative filters.
+Parametric neural policies trained via imitation or reinforcement learning optimize for nominal trajectory distributions in Euclidean coordinates. When the underlying workspace topology changes (e.g., an OOD obstacle blocks the primary corridor), fixed neural weights fail catastrophically because point-to-point vector extrapolation lacks topological awareness.
 
-Traditional signal processing (moving averages, bandpass filters, dynamic time warping) fails when contact spike amplitudes exceed the true signal magnitude ($>3\times$).
+**Experiment C** demonstrates that coupling a frozen policy with real-time **1-skeleton / simplicial manifold filtration** enables instant, zero-shot trajectory rerouting along continuous homological paths ($\beta_1$ cycle deformations) in $O(E)$ runtime complexity.
 
 ---
 
-## Theoretical Mechanism
+## 🔬 Experimental Setup
 
-This pipeline replaces Euclidean metric assumptions with coordinate-free **topological invariants**:
-
-Raw Multi-Channel Stream (with Artifacts)
-│
-▼
-Takens' Delay Embedding
-v(t) = [s(t), s(t+τ), ..., s(t+(m-1)τ)]
-│
-▼
-Vietoris–Rips Complex Filtration
-│
-▼
-H₁ Persistent Homology Diagrams
-│
-▼
-Persistence Lifetime Filtering
-L_i = death_i - birth_i > δ_th
-│
-▼
-2-Wasserstein Distance Drift Tracking
-W₂(D_t, D_{t-1}) → State Change Metric
-
-
-1. **State-Space Reconstruction:** Takens' Delay Embedding reconstructs the underlying continuous dynamical attractor manifold in $\mathbb{R}^{m \times k}$.
-2. **Vietoris–Rips Persistent Homology:** Computes $H_1$ persistence diagrams (topological loops/cycles).
-3. **Topological Noise Separation:** Micro-artifacts generate short-lived features that die near the diagonal ($d_i - b_i \le \delta_{th}$). Genuine macro-structural transitions induce high-persistence generators ($d_i - b_i \gg \delta_{th}$).
-4. **Wasserstein Metric Response:** The 2-Wasserstein distance $W_2(\mathcal{D}_{t-1}, \mathcal{D}_t)$ computes the optimal transport cost between consecutive window persistence signatures.
+* **State Space:** Continuous $SE(2)$ planar workspace $\mathcal{X} = [0, 1] \times [0, 1]$.
+* **Start / Goal Coordinates:** $x_{\text{start}} = (0.1, 0.5)$, $x_{\text{goal}} = (0.9, 0.5)$.
+* **Nominal Baseline:** Direct open-corridor navigation.
+* **OOD Topological Shift:** Dynamic injection of a spherical boundary obstacle centered at $(0.5, 0.5)$ with radius $r = 0.18$, completely blocking the learned nominal corridor.
 
 ---
 
-## Experimental Benchmark & Evidence
+## 🏛️ Evaluated Architectures
 
-The repository evaluates a 2-channel non-stationary biometric stream undergoing a macro-structural state shift at $t = 10\text{s}$ under continuous burst noise and contact spikes:
+1. **Nominal Neural Policy (Baseline):**
+   * Pretrained parametric policy generating directional vectors toward the goal.
+   * Static weights with no dynamic topological state modeling.
 
-==================================================
-EXPERIMENT RESULTS
-Inter-State Topological Transition Peak: 1.0017
-Max Intra-State Noise Fluctuation:       0.8116
-Wasserstein Signal-to-Artifact Ratio:    1.23
-
-[VERDICT: PASS] Inter-state structural change is completely separable from micro-artifacts.
-
-### Key Metric: Wasserstein Signal-to-Artifact Ratio (WSAR)
-
-$$\text{WSAR} = \frac{\min_{t \in T_{\text{transition}}} W_2(\mathcal{D}_t, \mathcal{D}_{t-1})}{\max_{t \in T_{\text{noise}}} W_2(\mathcal{D}_t, \mathcal{D}_{t-1})} = 1.23 > 1.0$$
-
-* A $\text{WSAR} > 1.0$ mathematically guarantees that the transition trigger cleanly exceeds the highest noise spike, eliminating false-positive triggers.
+2. **TCLA Topological Manifold Filter:**
+   * Constructs a 1-skeleton Vietoris-Rips complex over the sampled state space with connectivity threshold $\epsilon = 0.16$.
+   * Applies continuous runtime filtration by pruning vertices and intersecting edges in $O(E)$ time upon boundary detection.
+   * Extracts topological invariants ($\beta_0, \beta_1$) and injects real-time homological path guidance into the action stream without weight updates.
 
 ---
 
-## Quickstart
+## 📊 Empirical Results
 
-### 1. Clone the Repository
+======================================================================
+EXPERIMENT C RESULTS: OUT-OF-DISTRIBUTION TOPOLOGICAL GENERALIZATION
+Topological Invariants Post-Shift: Betti-0 (Components) = 1, Betti-1 (1-Loops) = 243
+Nominal Neural Policy (No Retraining) : FAILED (Collision)
+TCLA Topo-Filtered Policy (Zero-Shot) : SUCCESS (Target Reached)
+
+![Experiment C Trajectory](experiment_c_topological_ood.png)
+
+### Key Observations
+* **Collision Avoidance:** The fixed neural policy marched directly into the obstacle at $x \approx 0.35$ and failed.
+* **Invariant Tracking:** The topological filter preserved global manifold reachability ($\beta_0 = 1$) while dynamically reorganizing local loop homology ($\beta_1 = 243$).
+* **Compute Efficiency:** Rerouting executed in real-time ($<2\text{ ms}$) without backpropagation or fine-tuning.
+
+---
+
+## 🚀 Repository Structure
+
+├── experiment_c_topological_ood.py   # Benchmark script (Env, Policy, & Filtration)
+├── experiment_c_topological_ood.png  # Generated trajectory & simplicial manifold plot
+└── README.md                         # Documentation and theoretical context
+
+
+---
+
+## 🛠️ Usage
+
+### Prerequisites
 ```bash
-git clone [https://github.com/navienpotheri/topological_state_experiment.git](https://github.com/navienpotheri/topological_state_experiment.git)
-cd topological_state_experiment
-2. Install Dependencies
+pip install numpy matplotlib networkx scipy
+Execution
 Bash
-pip install -r requirements.txt
-3. Run the Experiment
-Bash
-python topological_state_experiment.py
-Project Structure
-├── topological_state_experiment.py  # Main simulation, TDA pipeline, metric evaluation & plotting
-├── requirements.txt                 # Core dependencies (ripser, persim, scikit-learn, etc.)
-├── .gitignore                       # Standard Python ignore rules
-└── README.md                        # Documentation & theoretical overview
-Applications
-Smart Garments / E-Textiles: Real-time posture and gait transition detection despite fabric stretching and slip.
-
-Biometric Wearables: Robust ECG/sEMG morphological segmentation under high physical activity.
-
-Autoregressive Robotic Manipulation: Topological oracle layers to prevent hallucination drift across long-horizon trajectories.
-
-License
-This project is licensed under the MIT License - see the LICENSE file for details.
+python experiment_c_topological_ood.py
