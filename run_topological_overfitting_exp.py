@@ -44,7 +44,6 @@ def compute_persistent_entropy(point_cloud, maxdim=1):
     Computes Persistent Entropy E(D) for H0 and H1 barcode lifespans.
     point_cloud: (N, d) numpy array of latent activations.
     """
-    # Compute Vietoris-Rips persistent homology
     diagrams = ripser(point_cloud, maxdim=maxdim)['dgms']
     entropies = []
     
@@ -153,33 +152,43 @@ for epoch in range(1, num_epochs + 1):
         print(f"Epoch {epoch:02d}/{num_epochs:02d} | Train Loss: {avg_train_loss:.4f} | Val Loss: {avg_val_loss:.4f} | H0 Ent: {h0_ent:.4f} | H1 Ent: {h1_ent:.4f}")
 
 # -------------------------------------------------------------
-# 5. Dual-Axis Visualization for Slide Deck
+# 5. Optimized Dual-Axis Visualization for Presentation Slides
 # -------------------------------------------------------------
 epochs = np.arange(1, num_epochs + 1)
-fig, ax1 = plt.subplots(figsize=(10, 5), dpi=300)
+
+# Compact, slide-friendly dimensions and high resolution
+fig, ax1 = plt.subplots(figsize=(8.5, 4.8), dpi=300)
+
+# Colors
+color_val = '#e74c3c'   # Red for Lagging Metric
+color_train = '#95a5a6' # Light Slate for Train Loss
+color_topo = '#00acc1'  # Cyan for Lead Topological Metric
 
 # Left Axis: Loss curves
-color_val = '#e74c3c'
-color_train = '#95a5a6'
 ax1.set_xlabel('Epoch', fontsize=12, fontweight='bold')
-ax1.set_ylabel('Loss', fontsize=12, fontweight='bold')
+ax1.set_ylabel('Loss (Lagging Metric)', fontsize=12, fontweight='bold')
 ax1.plot(epochs, history['train_loss'], color=color_train, linestyle=':', label='Train Loss', linewidth=1.8)
 ax1.plot(epochs, history['val_loss'], color=color_val, label='Validation Loss', linewidth=2.5)
-ax1.tick_params(axis='y')
+ax1.tick_params(axis='y', labelsize=10)
+ax1.set_xlim(1, num_epochs)
 
-# Right Axis: Topological Entropy (H0 / H1)
+# Right Axis: Topological Entropy (H0)
 ax2 = ax1.twinx()
-color_topo = '#00bcd4'
-ax2.set_ylabel('Persistent Entropy $E(D)$ [$H_0$]', color=color_topo, fontsize=12, fontweight='bold')
-ax2.plot(epochs, history['h0_entropy'], color=color_topo, linestyle='-', linewidth=2.5, label='Latent Persistent Entropy ($H_0$)')
-ax2.tick_params(axis='y', labelcolor=color_topo)
+ax2.set_ylabel('Latent $H_0$ Persistent Entropy (Lead Metric)', color=color_topo, fontsize=12, fontweight='bold')
+ax2.plot(epochs, history['h0_entropy'], color=color_topo, linestyle='-', linewidth=2.5, label='Persistent Entropy ($H_0$)')
+ax2.tick_params(axis='y', labelcolor=color_topo, labelsize=10)
 
-# Formatting
-plt.title('Topological Signal Preceding Validation Loss Degradation', fontsize=14, pad=15, fontweight='bold')
+# Clean single-line header and legend
+plt.title('Topological Signal Preceding Validation Loss Degradation', fontsize=13, pad=12, fontweight='bold')
 lines_1, labels_1 = ax1.get_legend_handles_labels()
 lines_2, labels_2 = ax2.get_legend_handles_labels()
-ax1.legend(lines_1 + lines_2, labels_1 + labels_2, loc='upper left', frameon=True)
+ax1.legend(lines_1 + lines_2, labels_1 + labels_2, loc='upper left', frameon=True, fontsize=9)
 
+# Tight layout prevents text truncation
 plt.tight_layout()
-plt.savefig('topological_lead_indicator.png')
+
+# Save both high-res artifacts
+plt.savefig('topological_lead_indicator.png', bbox_inches='tight', dpi=300)
+plt.savefig('topological_lead_indicator_compact.png', bbox_inches='tight', dpi=300)
+print("\n[Done] Figures saved as 'topological_lead_indicator.png' and 'topological_lead_indicator_compact.png'")
 plt.show()
